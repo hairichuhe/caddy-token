@@ -1,9 +1,8 @@
 package token
 
 import (
-	"net/http"
-
 	"caddy-token/utils/caddyutil"
+	"os"
 
 	"github.com/mholt/caddy"
 	"github.com/mholt/caddy/caddyhttp/httpserver"
@@ -23,8 +22,11 @@ func init() {
 type HandlerConfiguration struct {
 	// Prefixes on which Caddy activates this plugin (read-only).
 	//
-	// Order matters because scopes can overlap.
-	PathScopes []string
+	// UpFile paths
+	UpFileScopes []string
+
+	// proxy paths
+	ProxyScopes []string
 
 	// Maps scopes (paths) to their own and potentially differently configurations.
 	Scope map[string]*caddyutil.Config
@@ -49,18 +51,20 @@ func Setup(c *caddy.Controller) error {
 
 func parseCaddyConfig(c *caddy.Controller) (*HandlerConfiguration, error) {
 	siteConfig := &HandlerConfiguration{
-		PathScopes: make([]string, 0, 1),
-		Scope:      make(map[string]*caddyutil.Config),
+		UpFileScopes: make([]string, 0, 1),
+		ProxyScopes:  make([]string, 0, 1),
+		Scope:        make(map[string]*caddyutil.Config),
 	}
 
 	for c.Next() {
 		config := caddyutil.DefaultConfig()
 
 		scopes := c.RemainingArgs() // most likely only one path; but could be more
-		if len(scopes) == 0 {
+		if len(scopes) != 2 {
 			return siteConfig, c.ArgErr()
 		}
-		siteConfig.PathScopes = append(siteConfig.PathScopes, scopes...)
+		siteConfig.UpFileScopes = append(siteConfig.UpFileScopes, scopes[0])
+		siteConfig.ProxyScopes = append(siteConfig.ProxyScopes, scopes[1])
 
 		for c.NextBlock() {
 			key := c.Val()
@@ -93,41 +97,9 @@ func parseCaddyConfig(c *caddy.Controller) (*HandlerConfiguration, error) {
 					return siteConfig, c.ArgErr()
 				}
 				config.FileSrc = fileToPath
-			case "rd_word":
-				if !c.NextArg() {
-					return siteConfig, c.ArgErr()
-				}
-				// must be a directory
-				config.RdWord := c.Val()
-			case "up_file_src":
-				if !c.NextArg() {
-					return siteConfig, c.ArgErr()
-				}
-				// must be a directory
-				config.UpFileSrc := c.Val()
-			case "mysql_server":
+			case "allow_origin":
 				if c.NextArg() {
-					config.MysqlServer := c.Val()
-				}
-			case "mysql_user_name":
-				if c.NextArg() {
-					config.Username := c.Val()
-				}
-			case "mysql_password":
-				if c.NextArg() {
-					config.Password := c.Val()
-				}
-			case "mysql_database_name":
-				if c.NextArg() {
-					config.Dataname := c.Val()
-				}
-			case "redis_server":
-				if c.NextArg() {
-					config.Rdserver := c.Val()
-				}
-			case "redis_password":
-				if c.NextArg() {
-					config.RdPW := c.Val()
+					config.AllowOrigin = c.Val()
 				}
 			}
 		}
@@ -139,14 +111,7 @@ func parseCaddyConfig(c *caddy.Controller) (*HandlerConfiguration, error) {
 		if config.FileSrc == "" {
 			return siteConfig, c.Errf("请配置文件储存路径（“file_src”）！")
 		}
-
-		if config.RdWord == "" {
-			return siteConfig, c.Errf("请配置token标识符（“rd_word”）！")
-		}
-
-		if config.UpFileSrc == "" {
-			return siteConfig, c.Errf("请配置文件上传路径（“up_file_src”）！")
-		}
+		siteConfig.Scope[scopes[0]] = config
 	}
 
 	return siteConfig, nil
