@@ -2,6 +2,8 @@
 package caddyutil
 
 import (
+	"caddy-token/utils/aes"
+	str "caddy-token/utils/strings"
 	"encoding/base64"
 	"io"
 	"net/http"
@@ -9,8 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"zyjsxy/go-nginx/utils/aes"
-	str "zyjsxy/go-nginx/utils/strings"
 )
 
 func UpLoad(w http.ResponseWriter, r *http.Request, config *Config) {

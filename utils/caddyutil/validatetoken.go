@@ -2,12 +2,12 @@
 package caddyutil
 
 import (
+	"caddy-token/utils/aes"
 	"encoding/base64"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-	"zyjsxy/go-nginx/utils/aes"
 )
 
 func Nopass(w http.ResponseWriter, r *http.Request) bool {
