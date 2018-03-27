@@ -18,11 +18,11 @@ func UpLoad(w http.ResponseWriter, r *http.Request, config *Config) {
 	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
 	w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
-	imgSrc := r.FormValue("imgScr")
+	imgSrc := r.FormValue("imgSrc")
 	if imgSrc == "" {
-		UpLoadImg(w, r, config)
-	} else {
 		UpLoadFile(w, r, config)
+	} else {
+		UpLoadImg(w, r, config)
 	}
 }
 
@@ -33,13 +33,12 @@ func UpLoadImg(w http.ResponseWriter, r *http.Request, config *Config) {
 	tokenstr, _ := aesEnc.Decrypt(tokenori)
 	id := handleStr(tokenstr, "id:", ",ip:")
 	file, handle, err := r.FormFile("files")
-	imgSrc := r.FormValue("imgScr")
+	imgSrc := r.FormValue("imgSrc")
 	if strings.Index(imgSrc, "?") != -1 {
 		imgSrc = str.SubStr(imgSrc, 0, strings.Index(imgSrc, "?"))
 	}
 	suffix := str.GetSuffix(handle.Filename)
 	imgName := str.NTos(id) + suffix
-
 	if str.GetFileName(imgSrc) != str.NTos(id)+suffix && imgSrc != "/img/user.jpg" {
 		os.Remove(config.AvatarSrc + imgSrc)
 	}

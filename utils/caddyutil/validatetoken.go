@@ -15,6 +15,13 @@ func Nopass(w http.ResponseWriter, r *http.Request) bool {
 	aesEnc := aes.AesEncrypt{}
 	tokenori, err0 := base64.StdEncoding.DecodeString(r.Header.Get("Authorization"))
 	tokenstr, err1 := aesEnc.Decrypt(tokenori)
+
+	if r.Header.Get("Authorization") == "" {
+		w.WriteHeader(403)
+		//写入页面数据
+		w.Write([]byte("{\"code\":403,\"success\":false,\"message\":\"您未被授权，请重新登录！\"}"))
+		return true
+	}
 	if err1 != nil || err0 != nil {
 		//设置 http请求状态
 		w.WriteHeader(403)
