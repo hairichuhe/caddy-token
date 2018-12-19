@@ -58,6 +58,12 @@ inScope:
 		w.WriteHeader(200)
 		w.Write([]byte("true"))
 		return 0, nil
+	case "DELETE":
+		if caddyutil.Nopass(w, r) {
+			return 0, nil
+		}
+		caddyutil.DelFile(w, r, config)
+		return 0, nil
 	default:
 		return h.Next.ServeHTTP(w, r)
 	}

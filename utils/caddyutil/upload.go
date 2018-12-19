@@ -72,3 +72,28 @@ func UpLoadFile(w http.ResponseWriter, r *http.Request, config *Config) {
 	defer f.Close()
 	defer file.Close()
 }
+
+func Del(w http.ResponseWriter, r *http.Request, config *Config) {
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+	w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	FileSrc := r.FormValue("fileSrc")
+	if FileSrc == "" {
+		DelFile(w, r, config)
+	}
+}
+
+func DelFile(w http.ResponseWriter, r *http.Request, config *Config) {
+	FileSrc := r.FormValue("fileSrc")
+	delSrc := config.FileSrc + FileSrc
+	if _, err := os.Stat(delSrc); err != nil {
+		w.Write([]byte("{\"meta\":{\"code\":20000,\"success\":true,\"message\":\"ok!\"},\"data\":\"删除成功！\"}"))
+	} else {
+		err := os.Remove(delSrc)
+		if err != nil {
+			w.Write([]byte("{\"meta\":{\"code\":20000,\"success\":false,\"message\":" + err.Error() + "},\"data\":null}"))
+		} else {
+			w.Write([]byte("{\"meta\":{\"code\":20000,\"success\":true,\"message\":\"ok!\"},\"data\":\"删除成功！\"}"))
+		}
+	}
+}
